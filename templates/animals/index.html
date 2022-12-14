@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% load pagination_tags %}
+
+{% block extra_css %}
+/* GMaps bug- https://github.com/twitter/bootstrap/issues/2410 */
+#map img {
+    max-width: none;
+}
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{STATIC_URL}}jquery-ui-1.8.21.custom/css/cupertino/jquery-ui-1.8.21.custom.css">
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}jquery-ui-1.8.21.custom/js/jquery-ui-1.8.21.custom.min.js"></script>
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
+<script type="text/javascript" src="http://hpneo.github.io/gmaps/gmaps.js"></script>
+<script type="text/javascript">
+    var map;
+    var prev_mark_num = 0;
+
+    function openMarkerInfo(count, page) {
+        map.markers[prev_mark_num]['infoWindow'].close(map.map, map.markers[prev_mark_num]);
+        mark_num = ((page - 1) * 5) + count;
+        map.setCenter(map.markers[mark_num].position.lat(), map.markers[mark_num].position.lng())
+        map.markers[mark_num]['infoWindow'].open(map.map, map.markers[mark_num]);
+        prev_mark_num = mark_num;
+    }
+
+    $(document).ready(function(){
+        map = new GMaps({
+            div: '#map',
+            {% if location_found %}
+                zoom: 16,
+                lat: {{set_lat}},
+                lng: {{set_lng}}
+            {% else %}
+                zoom: 11,
+                lat: 30.264998,
+                lng: -97.691219
+            {% endif %}
+        });
+
+        {% for animal in alist %}
+            map.addMarker({
+                lat: {{animal.geometry.y}},
+                lng: {{animal.geometry.x}},
+                title: '{{animal.animal_id}}',
+                {% if animal.is_dog %}
+                    icon: '{{STATIC_URL}}img/small-marker.png',
+                {% else %}
+                    icon: '{{STATIC_URL}}img/small-orange-marker.png',
+                {% endif %}
+                infoWindow: {
+                    content: '<div style="height: 200px; width: 400px" id="popup_{{animal.id}}"><img src="{{STATIC_URL}}img/loading_big.gif"></div>{% if not forloop.first %}<a onclick="openMarkerInfo({{forloop.counter}}-2, 1)" href="#">Previous</a>&nbsp{% endif %}{% if not forloop.last %}<a onclick="openMarkerInfo({{forloop.counter}}, 1)" href="#">Next</a>{% endif %}',
+                    domready: function(){
+                        $('#popup_{{animal.id}}').load('{% url animals_popup animal.id%}')
+                    }
+                }
+            });
+        {% endfor %}
+
+        $('#id_intake_date_start').datepicker({dateFormat: 'yy-mm-dd'});
+        $('#id_intake_date_end').datepicker({dateFormat: 'yy-mm-dd'});
+
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row-fluid">
+  <div class="span3">
+        <div class="logo">
+            <a href='/'><img src="{{STATIC_URL}}img/straymapper.png"></a>
+        </div>
+        <h4>Search Results</h4>
+        {% autopaginate alist 5 as paginated_alist %}
+        {% paginate using "animals/paginate.html" %}
+        <table class="table" cellpadding="10">
+            {% for animal in paginated_alist %}
+                <tr onclick="openMarkerInfo({{forloop.counter0}}, {{page_obj.number}});">
+                    <td>
+                        <ul class="thumbnails">
+                            <li class="span2">
+                                {% if animal.photo.size > 231 %}
+                                    <img src="{{animal.thumbnail.url}}">
+                                {% else %}
+                                    <img src="{{STATIC_URL}}img/NoImage.jpg">
+                                {% endif %}
+                                {% if animal.is_adoptable %}
+                                    Adoptable
+                                {% endif %}
+                                {{animal.name|title}}
+                            </li>
+                        </ul>
+                    </td>
+                    <td>
+                        {{animal.description|lower}}<br />
+                        {{animal.animal_type|lower}}<br />
+                        {{animal.sex}}<br />
+                        {{animal.intake_date|date:"n/j/o"}}
+                    </td>
+                </tr>
+            {% endfor %}
+        </table>
+        {% paginate using "animals/paginate.html" %}
+        <br/><br/>
+        <br/><br/>
+        <br/>
+    </div> <!-- End span3 -->
+
+    <div class="span9">
+        <div align="right">Unable to find your pet below? <a href='{% url reports_index %}'>Report Here</a>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</div>
+        <div id="map"></div>
+        <div id="searchmap">
+            <form class="well form-inline" id="search-form" action="{% url home %}" method="POST">{% csrf_token %}
+                <table cellpadding="5">
+                    <tr>
+                        <td>Type:</td>
+                        <td>Sex:</td>
+                        <td>Missing Since:</td>
+                    </tr>
+                    <tr>
+                        <td>{{form.animal_type}}</td>
+                        <td>{{form.sex}}</td>
+                        <td>{{form.intake_date_start}}</td>
+                    </tr>
+                </table>
+                <span style="font-size: 14px;">Has image</span>{{form.has_image}}
+                {{form.address}}
+                <input type="submit" name="search-btn" value="Search" class="btn btn-primary">
+                <input type="submit" name="reset-btn" value="Reset" class="btn btn-link">
+            </form>
+        </div>
+        <div id='status-bar'>Displaying {{results_count}} animals from {{ startdate }}  to {{ enddate }}</div>
+    </div> <!-- End span9 -->
+</div> <!-- End row -->
+{% endblock %}

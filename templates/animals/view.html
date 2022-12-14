@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+{% endblock %}
+
+{% block extra_head %}
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="{{STATIC_URL}}js/jquery.phono.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="span12">
+        <div class="logo">
+            <a href='/'><img src="{{STATIC_URL}}img/straymapper.png"></a>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="span8">
+        <h1>{{animal.name}}</h1>
+        <h2>{{animal.description}}</h2>
+        <img src="{{animal.photo.url}}"><br/>
+    </div>
+    <div class="span4">
+        {{animal.location}}<br/>
+        {{animal.sex}}<br />
+        {{animal.intake_date|date:"n/j/o"}}<br/>
+        {{animal.age}}<br/>
+        {{animal.intake_condition}}
+        <br/><br/>
+        <h3>So is this your animal?</h3>
+        <p>
+            <span id="status"></span><br/>
+            <input id="call" type="button" disabled="true" value="Loading..." />
+            or <a onclick="olark('api.box.expand')" href='#'>chat with the animal shelter</a> below and please provide them with the following id:<br/>
+            <strong>{{animal.animal_id}}</strong><br/>
+            to speed up process of getting your pet back.
+        <p>
+        <h3>Still not sure if this is your pet?</h3>
+        <p>
+            Ask the shelter staff to take your pet to the viewing area, so that you can see a live feed of the animal.
+            <h4><a href='http://catroulette.be/'>Viewing Area Live Feed</a></h4>
+        </p>
+    </div> <!-- End span12 -->
+</div> <!-- End row -->
+{% endblock %}
+
+{% block javascript %}
+<script>
+    $(document).ready(function(){
+      var phono = $.phono({
+        apiKey: "fc45576bf4702da409981955f36d0f12",
+        onReady: function() {
+          $("#call").attr("disabled", false).val("Call");
+        }
+      });
+
+      $("#call").click(function() {
+        $("#call").attr("disabled", true).val("Busy");
+        phono.phone.dial("512-978-0500", {
+          onRing: function() {
+            $("#status").html("Ringing");
+          },
+          onAnswer: function() {
+            $("#status").html("Answered");
+          },
+          onHangup: function() {
+            $("#call").attr("disabled", false).val("Call");
+            $("#status").html("Hangup");
+          }
+        });
+      });
+    })
+</script>
+{% endblock %}

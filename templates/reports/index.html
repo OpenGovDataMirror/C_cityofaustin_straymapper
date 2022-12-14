@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{STATIC_URL}}jquery-ui-1.8.21.custom/css/cupertino/jquery-ui-1.8.21.custom.css">
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}jquery-ui-1.8.21.custom/js/jquery-ui-1.8.21.custom.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        $('#id_missing_since').datepicker({dateFormat: 'yy-mm-dd'});
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row-fluid">
+    <div class="span12">
+        <div class="logo">
+            <a href='/'><img src="{{STATIC_URL}}img/straymapper.png"></a>
+        </div>
+        <h4>Report Missing Animal</h4>
+        {{form.errors}}
+        <form id="report-form" action="{% url reports_index %}" enctype="multipart/form-data" method="POST">{% csrf_token %}
+            <div class="row-fluid">
+                <div class="span3">
+                    {{form.name.label}}</br>
+                    {{form.name}}
+                </div> <!-- End span3 -->
+                <div class="span3">
+                    {{form.missing_since.label}}</br>
+                    {{form.missing_since}}
+                </div> <!-- End span3 -->
+                <div class="span3">
+                    {{form.animal_type.label}}</br>
+                    {{form.animal_type}}
+                </div> <!-- End span3 -->
+            </div/> <!-- End row -->
+            <div class="row-fluid">
+                <div class="span6">
+                    <div class="row-fluid">
+                        <div class="span12">
+                            {{form.location.label}}</br>
+                            {{form.location}}</br>
+                        </div>
+                    </div>
+                    <div class="row-fluid">
+                        <div class="span6">
+                            {{form.description.label}}</br>
+                            {{form.description}}
+                        </div>
+                        <div class="span6">
+                            {{form.contact_info.label}}</br>
+                            {{form.contact_info}}
+                        </div>
+                    </div>
+                </div> <!-- End span6 -->
+                <div class="span3">
+                    <div class="row-fluid">
+                        <div class="span3">
+                            {{form.sex.label}}</br>
+                            {{form.sex}}
+                        </div> <!-- End span3 -->
+                    </div> <!-- End row -->
+                    <div class="row-fluid">
+                        <div class="span3">
+                            {{form.photo.label}}</br>
+                            {{form.photo}}
+                        </div> <!-- End span3 -->
+                    </div> <!-- End row -->
+                    <div class="row-fluid">
+                        <div class="span3">
+                            </br></br>
+                            <input type="submit" name="submit" value="Submit" class="btn btn-primary">
+                        </div> <!-- End span3 -->
+                    </div> <!-- End row -->
+                </div> <!-- End span3 -->
+            </div> <!-- End row -->
+        </form>
+    </div> <!-- End span12 -->
+</div> <!-- End row -->
+{% endblock %}
